@@ -1,109 +1,46 @@
-// Involvement API base URL
-const INVOLVEMENT_API = 'https://us-central1-involvement-api.cloudfunctions.net/capstoneApi';
-const APP_ID = 'movie-booking-app-2024'; // Unique app ID for this project
+const store = {
+  get: (key) => JSON.parse(localStorage.getItem(key) || 'null'),
+  set: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
+};
 
-// ─── LIKES ────────────────────────────────────────────────────────────────────
-
-/**
- * Fetch all likes for the app
- * @returns {Promise<Object>} map of itemId -> likeCount
- */
 export const fetchAllLikes = async () => {
-  try {
-    const response = await fetch(`${INVOLVEMENT_API}/apps/${APP_ID}/likes`);
-    if (!response.ok) return {};
-    const data = await response.json();
-    const likesMap = {};
-    data.forEach(({ item_id, likes }) => {
-      likesMap[item_id] = likes;
-    });
-    return likesMap;
-  } catch {
-    return {};
-  }
+  return store.get('likes') || {};
 };
 
-/**
- * Like an item
- * @param {string|number} itemId
- * @returns {Promise<void>}
- */
 export const likeItem = async (itemId) => {
-  await fetch(`${INVOLVEMENT_API}/apps/${APP_ID}/likes`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ item_id: String(itemId) }),
-  });
+  const likes = store.get('likes') || {};
+  likes[String(itemId)] = (likes[String(itemId)] || 0) + 1;
+  store.set('likes', likes);
 };
 
-// ─── COMMENTS ─────────────────────────────────────────────────────────────────
-
-/**
- * Fetch comments for an item
- * @param {string|number} itemId
- * @returns {Promise<Array>}
- */
 export const fetchComments = async (itemId) => {
-  try {
-    const response = await fetch(`${INVOLVEMENT_API}/apps/${APP_ID}/comments?item_id=${itemId}`);
-    if (!response.ok) return [];
-    return await response.json();
-  } catch {
-    return [];
-  }
+  const all = store.get('comments') || {};
+  return all[String(itemId)] || [];
 };
 
-/**
- * Post a comment on an item
- * @param {string|number} itemId
- * @param {string} username
- * @param {string} comment
- * @returns {Promise<void>}
- */
 export const postComment = async (itemId, username, comment) => {
-  await fetch(`${INVOLVEMENT_API}/apps/${APP_ID}/comments`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      item_id: String(itemId),
-      username,
-      comment,
-    }),
+  if (!username || !comment) throw new Error('Username and comment are required.');
+  const all = store.get('comments') || {};
+  const key = String(itemId);
+  if (!all[key]) all[key] = [];
+  all[key].push({
+    username,
+    comment,
+    creation_date: new Date().toISOString().split('T')[0],
   });
+  store.set('comments', all);
 };
 
-// ─── RESERVATIONS ─────────────────────────────────────────────────────────────
-
-/**
- * Fetch reservations for an item
- * @param {string|number} itemId
- * @returns {Promise<Array>}
- */
 export const fetchReservations = async (itemId) => {
-  try {
-    const response = await fetch(`${INVOLVEMENT_API}/apps/${APP_ID}/reservations?item_id=${itemId}`);
-    if (!response.ok) return [];
-    return await response.json();
-  } catch {
-    return [];
-  }
+  const all = store.get('reservations') || {};
+  return all[String(itemId)] || [];
 };
 
-/**
- * Post a reservation for an item
- * @param {string|number} itemId
- * @param {string} username
- * @param {string} date
- * @returns {Promise<void>}
- */
 export const postReservation = async (itemId, username, date) => {
-  await fetch(`${INVOLVEMENT_API}/apps/${APP_ID}/reservations`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      item_id: String(itemId),
-      username,
-      date,
-    }),
-  });
+  if (!username || !date) throw new Error('Username and date are required.');
+  const all = store.get('reservations') || {};
+  const key = String(itemId);
+  if (!all[key]) all[key] = [];
+  all[key].push({ username, date });
+  store.set('reservations', all);
 };

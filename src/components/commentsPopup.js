@@ -2,10 +2,6 @@ import { fetchShowDetails } from '../api/tvmaze.js';
 import { fetchComments, postComment } from '../api/involvement.js';
 import { countComments } from '../utils/counters.js';
 
-/**
- * Render and open the Comments popup for a given show
- * @param {number} showId
- */
 export const openCommentsPopup = async (showId) => {
   const existing = document.getElementById('comments-popup');
   if (existing) existing.remove();
@@ -36,13 +32,16 @@ export const openCommentsPopup = async (showId) => {
       fetchComments(showId),
     ]);
     renderCommentsPopup(overlay.querySelector('#comments-content'), show, comments);
-  } catch {
-    overlay.querySelector('#comments-content').innerHTML = '<p class="error">Failed to load data. Please try again.</p>';
+  } catch (err) {
+    console.error('Failed to load popup:', err);
+    overlay.querySelector('#comments-content').innerHTML =
+      `<p class="error">Failed to load data: ${err.message}</p>`;
   }
 };
 
 const renderCommentsPopup = (container, show, comments) => {
   const count = countComments(comments);
+
   container.innerHTML = `
     <div class="popup-header">
       <img src="${show.image}" alt="${show.name}" class="popup-img" />
@@ -73,10 +72,11 @@ const renderCommentsPopup = (container, show, comments) => {
 
     <div class="popup-section comments-section">
       <h3>Comments <span class="count-badge" id="comments-count">${count}</span></h3>
+
       <div class="comments-list" id="comments-list">
         ${count === 0
-    ? '<p class="no-data">No comments yet. Be the first!</p>'
-    : comments.map((c) => `
+          ? '<p class="no-data">No comments yet. Be the first!</p>'
+          : comments.map((c) => `
               <div class="comment-item">
                 <div class="comment-avatar">${c.username.charAt(0).toUpperCase()}</div>
                 <div class="comment-body">
@@ -97,51 +97,60 @@ const renderCommentsPopup = (container, show, comments) => {
           <textarea id="comment-text" placeholder="Share your thoughts…" required maxlength="500" rows="3"></textarea>
         </div>
         <button type="submit" class="btn-primary" id="submit-comment">Post Comment</button>
-        <p class="form-error hidden" id="comment-error">Please fill in all fields.</p>
+        <p class="form-error hidden" id="comment-error"></p>
       </form>
     </div>
   `;
 
   container.querySelector('#comment-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const username = container.querySelector('#comment-username').value.trim();
-    const text = container.querySelector('#comment-text').value.trim();
-    const errorEl = container.querySelector('#comment-error');
 
+    const username  = container.querySelector('#comment-username').value.trim();
+    const text      = container.querySelector('#comment-text').value.trim();
+    const errorEl   = container.querySelector('#comment-error');
+    const btn       = container.querySelector('#submit-comment');
+
+    // Validate
     if (!username || !text) {
+      errorEl.textContent = 'Please fill in all fields.';
       errorEl.classList.remove('hidden');
       return;
     }
     errorEl.classList.add('hidden');
 
-    const btn = container.querySelector('#submit-comment');
     btn.disabled = true;
     btn.textContent = 'Posting…';
 
     try {
       await postComment(show.id, username, text);
-      const updatedComments = await fetchComments(show.id);
-      const newCount = countComments(updatedComments);
 
-      container.querySelector('#comments-count').textContent = newCount;
-      const newComment = updatedComments[updatedComments.length - 1];
+      // Optimistically add comment to UI
       const list = container.querySelector('#comments-list');
       list.querySelector('.no-data')?.remove();
+
       const div = document.createElement('div');
       div.className = 'comment-item animate-in';
       div.innerHTML = `
         <div class="comment-avatar">${username.charAt(0).toUpperCase()}</div>
         <div class="comment-body">
           <strong>${username}</strong>
-          <span class="comment-date">${newComment?.creation_date || 'just now'}</span>
+          <span class="comment-date">just now</span>
           <p>${text}</p>
         </div>
       `;
       list.appendChild(div);
+
+      // Update counter
+      const countEl = container.querySelector('#comments-count');
+      countEl.textContent = parseInt(countEl.textContent, 10) + 1;
+
+      // Clear form
       container.querySelector('#comment-username').value = '';
       container.querySelector('#comment-text').value = '';
-    } catch {
-      errorEl.textContent = 'Failed to post. Please try again.';
+
+    } catch (err) {
+      console.error('postComment failed:', err);
+      errorEl.textContent = err.message || 'Failed to post. Please try again.';
       errorEl.classList.remove('hidden');
     } finally {
       btn.disabled = false;
