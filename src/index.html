@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Movie Booking App — Discover, like, comment and book seats for your favourite shows." />
+  <title>Movie Booking App</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
+</head>
+<body>
+
+  <!-- ── Header ────────────────────────────────── -->
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <a href="#" class="logo" aria-label="Movie Booking App Home">
+        <div class="logo-icon" aria-hidden="true">🎬</div>
+        <span class="logo-text">Movie<span>Booking</span></span>
+      </a>
+
+      <form class="search-bar" id="search-form" role="search" aria-label="Search movies">
+        <input
+          type="search"
+          id="search-input"
+          placeholder="Search movies, genres…"
+          aria-label="Search query"
+          autocomplete="off"
+        />
+        <button type="submit" aria-label="Search">Search</button>
+      </form>
+
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#movies">Movies</a>
+        <a href="#about">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Hero ──────────────────────────────────── -->
+  <section class="hero" aria-labelledby="hero-title">
+    <p class="hero-eyebrow">Your Cinema, Your Choice</p>
+    <h1 class="hero-title" id="hero-title">Discover &amp; Book <em>Great Movies</em></h1>
+    <p class="hero-sub">Browse thousands of titles, like your favourites, share your thoughts, and reserve your seat — all in one place.</p>
+
+    <div class="genre-filters" role="group" aria-label="Quick genre filters">
+      <button class="genre-btn active" data-genre="action">⚡ Action</button>
+      <button class="genre-btn" data-genre="crime">🕵️ Crime</button>
+      <button class="genre-btn" data-genre="drama">🎭 Drama</button>
+      <button class="genre-btn" data-genre="thriller">😱 Thriller</button>
+      <button class="genre-btn" data-genre="comedy">😂 Comedy</button>
+      <button class="genre-btn" data-genre="sci-fi">🚀 Sci-Fi</button>
+      <button class="genre-btn" data-genre="romance">💕 Romance</button>
+    </div>
+  </section>
+
+  <!-- ── Movies Section ────────────────────────── -->
+  <main id="movies" role="main">
+    <div class="section-header">
+      <h2 class="section-title">Now Showing</h2>
+      <span class="section-count" aria-live="polite">
+        <span id="movies-count">0</span> titles
+      </span>
+    </div>
+
+    <section class="movies-section" aria-label="Movies grid">
+      <div id="movies-grid" role="list" aria-label="Movie cards"></div>
+    </section>
+  </main>
+
+  <!-- ── Footer ────────────────────────────────── -->
+  <footer class="site-footer" id="about" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="logo" aria-label="Movie Booking App">
+          <div class="logo-icon" aria-hidden="true">🎬</div>
+          <span class="logo-text">Movie<span>Booking</span></span>
+        </div>
+        <p>Your go-to platform for discovering TV shows and movies. Like what you love, leave a comment, and book your seat for the best screenings.</p>
+      </div>
+
+      <div class="footer-col">
+        <h5>Explore</h5>
+        <ul>
+          <li><a href="#movies">Movies</a></li>
+          <li><a href="#" onclick="return false;">TV Shows</a></li>
+          <li><a href="#" onclick="return false;">New Releases</a></li>
+          <li><a href="#" onclick="return false;">Top Rated</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>About</h5>
+        <ul>
+          <li><a href="https://www.tvmaze.com/api" target="_blank" rel="noopener">TVmaze API</a></li>
+          <li><a href="https://github.com" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="#" onclick="return false;">Privacy Policy</a></li>
+          <li><a href="#" onclick="return false;">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; <span id="year"></span> <span>MovieBooking App</span>. Built with the TVmaze &amp; Involvement APIs.</p>
+      <p>Data powered by <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVmaze</a></p>
+    </div>
+  </footer>
+
+</body>
+</html>
