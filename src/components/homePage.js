@@ -1,5 +1,5 @@
 import { fetchShows } from '../api/tvmaze.js';
-import { fetchAllLikes, likeItem } from '../api/involvement.js';
+import { fetchAllLikes, likeItem, hasLiked } from '../api/involvement.js';
 import { countItems } from '../utils/counters.js';
 import { openCommentsPopup } from './commentsPopup.js';
 import { openReservationsPopup } from './reservationsPopup.js';
@@ -66,31 +66,36 @@ const createMovieCard = (show, likes, index) => {
       <h3 class="card-title">${show.name}</h3>
       <p class="card-year">${show.premiered?.split('-')[0] || 'N/A'} Â· ${show.network}</p>
       <div class="card-actions">
-        <button class="btn-like" data-id="${show.id}" aria-label="Like ${show.name}">
-          <span class="heart-icon">â™¥</span>
-          <span class="like-count" id="like-count-${show.id}">${likes}</span>
-        </button>
-        <button class="btn-comments" data-id="${show.id}">í²¬ Comments</button>
-        <button class="btn-reserve" data-id="${show.id}">í¾¬ Reserve</button>
+        <button class="btn-like ${alreadyLiked ? 'liked' : ''}" 
+          data-id="${show.id}" 
+          aria-label="Like ${show.name}"
+          ${alreadyLiked ? 'disabled title="You already liked this"' : ''}>
+    <span class="heart-icon">${alreadyLiked ? 'â™¥' : 'â™¡'}</span>
+    <span class="like-count" id="like-count-${show.id}">${likes}</span>
+  </button>
+        <button class="btn-comments" data-id="${show.id}">ï¿½ï¿½ï¿½ Comments</button>
+        <button class="btn-reserve" data-id="${show.id}">ï¿½ï¿½ï¿½ Reserve</button>
       </div>
     </div>
   `;
 
   card.querySelector('.btn-like').addEventListener('click', async (e) => {
-    const btn = e.currentTarget;
-    btn.disabled = true;
-    btn.classList.add('liking');
-    try {
-      await likeItem(show.id);
-      const countEl = card.querySelector(`#like-count-${show.id}`);
-      countEl.textContent = parseInt(countEl.textContent, 10) + 1;
-      btn.classList.add('liked');
-    } catch {}
-    finally {
-      btn.disabled = false;
-      btn.classList.remove('liking');
-    }
-  });
+  const btn = e.currentTarget;
+  if (btn.disabled) return;
+  
+  btn.disabled = true;
+  try {
+    await likeItem(show.id);
+    const countEl = card.querySelector(`#like-count-${show.id}`);
+    countEl.textContent = parseInt(countEl.textContent, 10) + 1;
+    btn.classList.add('liked');
+    btn.querySelector('.heart-icon').textContent = 'â™¥';
+    btn.title = 'You already liked this';
+  } catch (err) {
+    btn.disabled = false; // re-enable only if it failed for another reason
+    console.error(err.message);
+  }
+});
 
   card.querySelector('.btn-comments').addEventListener('click', () => openCommentsPopup(show.id));
   card.querySelector('.btn-reserve').addEventListener('click', () => openReservationsPopup(show.id));

@@ -7,10 +7,23 @@ export const fetchAllLikes = async () => {
   return store.get('likes') || {};
 };
 
+export const hasLiked = (itemId) => {
+  const likedItems = store.get('likedItems') || [];
+  return likedItems.includes(String(itemId));
+};
+
 export const likeItem = async (itemId) => {
+  if (hasLiked(itemId)) {
+    throw new Error('You have already liked this item.');
+  }
   const likes = store.get('likes') || {};
   likes[String(itemId)] = (likes[String(itemId)] || 0) + 1;
   store.set('likes', likes);
+
+  // Record that this user has liked this item
+  const likedItems = store.get('likedItems') || [];
+  likedItems.push(String(itemId));
+  store.set('likedItems', likedItems);
 };
 
 export const fetchComments = async (itemId) => {
