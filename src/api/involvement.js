@@ -3,10 +3,17 @@ const store = {
   set: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
 };
 
+// ─── LIKES ────────────────────────────────────────────────────────────────────
+
 export const fetchAllLikes = async () => {
   return store.get('likes') || {};
 };
 
+/**
+ * Check if the current user has already liked a specific item
+ * @param {string|number} itemId
+ * @returns {boolean}
+ */
 export const hasLiked = (itemId) => {
   const likedItems = store.get('likedItems') || [];
   return likedItems.includes(String(itemId));
@@ -14,17 +21,20 @@ export const hasLiked = (itemId) => {
 
 export const likeItem = async (itemId) => {
   if (hasLiked(itemId)) {
-    throw new Error('You have already liked this item.');
+    throw new Error('You have already liked this.');
   }
+  // Increment like count
   const likes = store.get('likes') || {};
   likes[String(itemId)] = (likes[String(itemId)] || 0) + 1;
   store.set('likes', likes);
 
-  // Record that this user has liked this item
+  // Record this item as liked by the user
   const likedItems = store.get('likedItems') || [];
   likedItems.push(String(itemId));
   store.set('likedItems', likedItems);
 };
+
+// ─── COMMENTS ─────────────────────────────────────────────────────────────────
 
 export const fetchComments = async (itemId) => {
   const all = store.get('comments') || {};
@@ -43,6 +53,8 @@ export const postComment = async (itemId, username, comment) => {
   });
   store.set('comments', all);
 };
+
+// ─── RESERVATIONS ─────────────────────────────────────────────────────────────
 
 export const fetchReservations = async (itemId) => {
   const all = store.get('reservations') || {};

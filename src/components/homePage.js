@@ -48,6 +48,9 @@ const createMovieCard = (show, likes, index) => {
   card.style.animationDelay = `${index * 0.05}s`;
   card.dataset.id = show.id;
 
+  // Check per-movie if THIS show has been liked
+  const alreadyLiked = hasLiked(show.id);
+
   card.innerHTML = `
     <div class="card-img-wrapper">
       <img
@@ -66,36 +69,43 @@ const createMovieCard = (show, likes, index) => {
       <h3 class="card-title">${show.name}</h3>
       <p class="card-year">${show.premiered?.split('-')[0] || 'N/A'} · ${show.network}</p>
       <div class="card-actions">
-        <button class="btn-like ${alreadyLiked ? 'liked' : ''}" 
-          data-id="${show.id}" 
+        <button
+          class="btn-like ${alreadyLiked ? 'liked' : ''}"
+          data-id="${show.id}"
           aria-label="Like ${show.name}"
-          ${alreadyLiked ? 'disabled title="You already liked this"' : ''}>
-    <span class="heart-icon">${alreadyLiked ? '♥' : '♡'}</span>
-    <span class="like-count" id="like-count-${show.id}">${likes}</span>
-  </button>
-        <button class="btn-comments" data-id="${show.id}">��� Comments</button>
-        <button class="btn-reserve" data-id="${show.id}">��� Reserve</button>
+          ${alreadyLiked ? 'disabled title="You already liked this"' : ''}
+        >
+          <span class="heart-icon">${alreadyLiked ? '♥' : '♡'}</span>
+          <span class="like-count" id="like-count-${show.id}">${likes}</span>
+        </button>
+        <button class="btn-comments" data-id="${show.id}" aria-label="Comments for ${show.name}">
+          💬 Comments
+        </button>
+        <button class="btn-reserve" data-id="${show.id}" aria-label="Reserve ${show.name}">
+          🎬 Reserve
+        </button>
       </div>
     </div>
   `;
 
-  card.querySelector('.btn-like').addEventListener('click', async (e) => {
-  const btn = e.currentTarget;
-  if (btn.disabled) return;
-  
-  btn.disabled = true;
-  try {
-    await likeItem(show.id);
-    const countEl = card.querySelector(`#like-count-${show.id}`);
-    countEl.textContent = parseInt(countEl.textContent, 10) + 1;
-    btn.classList.add('liked');
-    btn.querySelector('.heart-icon').textContent = '♥';
-    btn.title = 'You already liked this';
-  } catch (err) {
-    btn.disabled = false; // re-enable only if it failed for another reason
-    console.error(err.message);
+  // Like button — only attach listener if not already liked
+  const likeBtn = card.querySelector('.btn-like');
+  if (!alreadyLiked) {
+    likeBtn.addEventListener('click', async () => {
+      likeBtn.disabled = true;
+      try {
+        await likeItem(show.id);
+        const countEl = card.querySelector(`#like-count-${show.id}`);
+        countEl.textContent = parseInt(countEl.textContent, 10) + 1;
+        likeBtn.classList.add('liked');
+        likeBtn.querySelector('.heart-icon').textContent = '♥';
+        likeBtn.title = 'You already liked this';
+      } catch (err) {
+        console.error(err.message);
+        likeBtn.disabled = false;
+      }
+    });
   }
-});
 
   card.querySelector('.btn-comments').addEventListener('click', () => openCommentsPopup(show.id));
   card.querySelector('.btn-reserve').addEventListener('click', () => openReservationsPopup(show.id));
