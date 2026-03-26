@@ -1,5 +1,5 @@
 import { fetchShows } from '../api/tvmaze.js';
-import { fetchAllLikes, likeItem, hasLiked } from '../api/involvement.js';
+import { fetchAllLikes, toggleLike, hasLiked } from '../api/involvement.js';
 import { countItems } from '../utils/counters.js';
 import { openCommentsPopup } from './commentsPopup.js';
 import { openReservationsPopup } from './reservationsPopup.js';
@@ -48,7 +48,7 @@ const createMovieCard = (show, likes, index) => {
   card.style.animationDelay = `${index * 0.05}s`;
   card.dataset.id = show.id;
 
-  // Check per-movie if THIS show has been liked
+  // Check if this specific movie has been liked
   const alreadyLiked = hasLiked(show.id);
 
   card.innerHTML = `
@@ -72,8 +72,8 @@ const createMovieCard = (show, likes, index) => {
         <button
           class="btn-like ${alreadyLiked ? 'liked' : ''}"
           data-id="${show.id}"
-          aria-label="Like ${show.name}"
-          ${alreadyLiked ? 'disabled title="You already liked this"' : ''}
+          aria-label="${alreadyLiked ? 'Unlike' : 'Like'} ${show.name}"
+          title="${alreadyLiked ? 'Unlike' : 'Like'}"
         >
           <span class="heart-icon">${alreadyLiked ? '♥' : '♡'}</span>
           <span class="like-count" id="like-count-${show.id}">${likes}</span>
@@ -88,24 +88,36 @@ const createMovieCard = (show, likes, index) => {
     </div>
   `;
 
-  // Like button — only attach listener if not already liked
+  // Like / Unlike toggle
   const likeBtn = card.querySelector('.btn-like');
-  if (!alreadyLiked) {
-    likeBtn.addEventListener('click', async () => {
-      likeBtn.disabled = true;
-      try {
-        await likeItem(show.id);
-        const countEl = card.querySelector(`#like-count-${show.id}`);
-        countEl.textContent = parseInt(countEl.textContent, 10) + 1;
-        likeBtn.classList.add('liked');
-        likeBtn.querySelector('.heart-icon').textContent = '♥';
-        likeBtn.title = 'You already liked this';
-      } catch (err) {
-        console.error(err.message);
-        likeBtn.disabled = false;
-      }
-    });
-  }
+  const heartIcon = likeBtn.querySelector('.heart-icon');
+  const likeCountEl = card.querySelector(`#like-count-${show.id}`);
+
+  likeBtn.addEventListener('click', () => {
+    // Toggle like in localStorage and get new state
+    const isNowLiked = toggleLike(show.id);
+
+    // Update count
+    const currentCount = parseInt(likeCountEl.textContent, 10);
+    likeCountEl.textContent = isNowLiked ? currentCount + 1 : currentCount - 1;
+
+    // Update button appearance
+    if (isNowLiked) {
+      likeBtn.classList.add('liked');
+      heartIcon.textContent = '♥';
+      likeBtn.title = 'Unlike';
+      likeBtn.setAttribute('aria-label', `Unlike ${show.name}`);
+    } else {
+      likeBtn.classList.remove('liked');
+      heartIcon.textContent = '♡';
+      likeBtn.title = 'Like';
+      likeBtn.setAttribute('aria-label', `Like ${show.name}`);
+    }
+
+    // Small pop animation
+    likeBtn.style.transform = 'scale(1.3)';
+    setTimeout(() => { likeBtn.style.transform = 'scale(1)'; }, 200);
+  });
 
   card.querySelector('.btn-comments').addEventListener('click', () => openCommentsPopup(show.id));
   card.querySelector('.btn-reserve').addEventListener('click', () => openReservationsPopup(show.id));
