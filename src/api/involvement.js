@@ -10,7 +10,7 @@ export const fetchAllLikes = async () => {
 };
 
 /**
- * Check if the current user has already liked a specific item
+ * Check if the current user has liked a specific item
  * @param {string|number} itemId
  * @returns {boolean}
  */
@@ -19,19 +19,32 @@ export const hasLiked = (itemId) => {
   return likedItems.includes(String(itemId));
 };
 
-export const likeItem = async (itemId) => {
-  if (hasLiked(itemId)) {
-    throw new Error('You have already liked this.');
-  }
-  // Increment like count
+/**
+ * Toggle like/unlike for an item.
+ * Returns true if liked, false if unliked.
+ * @param {string|number} itemId
+ * @returns {boolean}
+ */
+export const toggleLike = (itemId) => {
+  const id = String(itemId);
   const likes = store.get('likes') || {};
-  likes[String(itemId)] = (likes[String(itemId)] || 0) + 1;
-  store.set('likes', likes);
-
-  // Record this item as liked by the user
   const likedItems = store.get('likedItems') || [];
-  likedItems.push(String(itemId));
-  store.set('likedItems', likedItems);
+
+  if (likedItems.includes(id)) {
+    // Unlike — remove from liked list and decrement count
+    const updated = likedItems.filter((i) => i !== id);
+    store.set('likedItems', updated);
+    likes[id] = Math.max((likes[id] || 1) - 1, 0);
+    store.set('likes', likes);
+    return false; // now unliked
+  } else {
+    // Like — add to liked list and increment count
+    likedItems.push(id);
+    store.set('likedItems', likedItems);
+    likes[id] = (likes[id] || 0) + 1;
+    store.set('likes', likes);
+    return true; // now liked
+  }
 };
 
 // ─── COMMENTS ─────────────────────────────────────────────────────────────────
